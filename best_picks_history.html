@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Predicting Machine - Best Picks History</title>
+<style>
+
+body { font-family: Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:24px; }
+h1 { font-size: 22px; margin-bottom:4px; }
+.sub { color:#94a3b8; font-size:13px; margin-bottom:20px; }
+.nav { font-size:13px; margin-bottom:16px; }
+.nav a { color:#93c5fd; text-decoration:none; margin-right:16px; }
+.nav a:hover { text-decoration:underline; }
+.cards { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+.card { background:#1e293b; border-radius:10px; padding:16px 20px; min-width:160px; }
+.card .num { font-size:26px; font-weight:bold; }
+.card .label { font-size:12px; color:#94a3b8; }
+h2 { font-size:16px; margin-top:32px; border-bottom:1px solid #334155; padding-bottom:6px; }
+h3 { font-size:14px; margin-top:20px; color:#93c5fd; }
+table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px; }
+th { text-align:left; background:#1e293b; padding:6px; position:sticky; top:0; }
+td { padding:5px 7px; border-bottom:1px solid #1e293b; }
+tr.low { background:#3f2f10; }
+tr.shortrest { background:#3f1f1f; }
+.rest-badge { color:#f87171; font-size:11px; }
+.edge-badge { color:#4ade80; font-size:11px; }
+.note { font-size:12px; color:#94a3b8; background:#1e293b; padding:12px; border-radius:8px; margin-top:8px; }
+.combined { font-weight:bold; font-size:15px; margin-top:10px; }
+.chart-controls { margin-top:16px; font-size:13px; }
+.chart-controls select { background:#1e293b; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:5px 8px; margin-left:6px; }
+.chart-wrap { background:#1e293b; border-radius:10px; padding:14px; margin-top:8px; max-width:900px; }
+.filter-bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; background:#1e293b; padding:12px; border-radius:8px; }
+.filter-bar label { font-size:12px; color:#94a3b8; }
+.filter-bar select { background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:5px 8px; }
+.pick-card { background:#1e293b; border-radius:10px; padding:14px 16px; margin-top:10px; }
+.pick-header { font-size:11.5px; color:#94a3b8; margin-bottom:4px; }
+.pick-rank { color:#93c5fd; font-weight:bold; }
+.pick-main { font-size:14px; margin-bottom:8px; }
+.h2h-block { background:#111c31; border-radius:8px; padding:10px 12px; margin-top:6px; }
+.h2h-title { font-size:11px; color:#93c5fd; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+.h2h-summary { font-size:12.5px; color:#cbd5e1; margin-bottom:6px; }
+.h2h-empty { font-size:12.5px; color:#64748b; font-style:italic; }
+.h2h-table { width:100%; font-size:12px; margin-top:0; }
+.h2h-table td { padding:3px 6px; border-bottom:1px solid #1e293b; color:#94a3b8; }
+.prob-bar-wrap { display:flex; align-items:center; gap:8px; margin-top:6px; max-width:360px; }
+.prob-bar { flex:1; height:14px; background:#0f172a; border-radius:7px; overflow:hidden; border:1px solid #334155; }
+.prob-bar-fill { height:100%; border-radius:7px; }
+.prob-bar-fill.prob-high { background:linear-gradient(90deg,#16a34a,#4ade80); }
+.prob-bar-fill.prob-medium { background:linear-gradient(90deg,#d97706,#fbbf24); }
+.prob-bar-fill.prob-low { background:linear-gradient(90deg,#dc2626,#f87171); }
+.prob-bar-label { font-size:11px; color:#94a3b8; min-width:34px; text-align:right; }
+
+/* Full multi-panel Best Pick card */
+.full-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:18px 20px; margin-top:16px; }
+.full-card.high-value { border:2px solid #22c55e; background:linear-gradient(135deg, rgba(34,197,94,0.10), #1e293b 45%); }
+.fc-header { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;
+             margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid #334155; }
+.fc-teams { font-size:1.15em; font-weight:700; }
+.fc-teams .vs2 { color:#64748b; font-weight:400; font-size:0.8em; margin:0 8px; }
+.fc-meta { text-align:right; font-size:12px; color:#94a3b8; line-height:1.6; }
+.fc-hv-badge { display:inline-block; background:#16a34a; color:#f0fdf4; padding:3px 10px; border-radius:20px;
+               font-size:11px; font-weight:700; margin-top:4px; }
+.fc-pick-callout { background:#111c31; border-radius:8px; padding:12px 14px; margin-bottom:16px; }
+.fc-pick-label { font-size:11px; color:#93c5fd; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+.fc-pick-main { font-size:14.5px; font-weight:600; }
+.fc-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:14px; }
+.fc-section { background:#111c31; border-radius:8px; padding:12px 14px; }
+.fc-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#93c5fd; margin-bottom:10px; }
+.fc-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12.5px; gap:8px; }
+.fc-row:last-child { margin-bottom:0; }
+.fc-row .fc-label { color:#cbd5e1; white-space:nowrap; }
+.fc-form-icons { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.fc-form-icon { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+                font-size:10px; font-weight:700; color:#0f172a; flex-shrink:0; }
+.fc-form-icon.fW { background:#4ade80; }
+.fc-form-icon.fD { background:#fbbf24; }
+.fc-form-icon.fL { background:#f87171; }
+.fc-win-pct { margin-left:6px; font-weight:700; font-size:11.5px; color:#e2e8f0; }
+.fc-xg-track { flex:1; height:22px; background:#0f172a; border-radius:5px; overflow:hidden; border:1px solid #334155; margin-left:10px; }
+.fc-xg-fill { height:100%; background:linear-gradient(90deg,#2563eb,#3b82f6); display:flex; align-items:center;
+              justify-content:center; color:white; font-size:11px; font-weight:700; }
+.fc-strength-track { flex:1; height:14px; background:#0f172a; border-radius:7px; overflow:hidden; border:1px solid #334155; }
+.fc-strength-fill { height:100%; background:linear-gradient(90deg,#2563eb,#3b82f6); }
+.fc-strength-fill.def { background:linear-gradient(90deg,#16a34a,#4ade80); }
+.fc-mini-badge { padding:2px 8px; border-radius:5px; font-size:11.5px; font-weight:700; color:#0f172a; background:#93c5fd; min-width:32px; text-align:center; }
+.fc-corner-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-top:6px; }
+.fc-corner-cell { font-size:11px; }
+.fc-corner-cell .fc-label { display:block; margin-bottom:3px; font-size:10.5px; color:#94a3b8; }
+.fc-insufficient { color:#64748b; font-style:italic; font-size:11.5px; }
+
+/* League Matches page */
+.league-jump { display:flex; flex-wrap:wrap; gap:6px; background:#1e293b; padding:12px; border-radius:8px; margin-bottom:20px; }
+.league-jump a { color:#93c5fd; text-decoration:none; font-size:12px; background:#111c31; padding:4px 10px; border-radius:12px; }
+.league-jump a:hover { background:#334155; text-decoration:none; }
+.league-section { margin-top:36px; padding-top:4px; border-top:2px solid #334155; }
+.league-section h2 { scroll-margin-top:12px; }
+.table-scroll { overflow-x:auto; }
+.table-scroll table { min-width:1500px; }
+.result-cell.best { font-weight:700; color:#4ade80; }
+
+tr.hit { background:#16321f; }
+tr.miss { background:#3f1f1f; }
+</style></head>
+<body>
+<h1>Predicting Machine — Best Picks History</h1>
+<div class="sub">Every Best Pick / Top Value Bet ever generated - persists across runs, unlike the weekly snapshot pages. Outcomes refresh automatically once graded.</div>
+<div class="nav"><a href="dashboard.html">&larr; Full Dashboard</a> <a href="best_picks.html">→ View Best Picks</a> <a href="value_bets.html">→ View Top Value Bets</a> <a href="league_matches.html">→ All League Matches</a></div>
+<div class="cards">
+  <div class="card"><div class="num">99</div><div class="label">Total tracked</div></div>
+  <div class="card"><div class="num">59</div><div class="label">Graded</div></div>
+  <div class="card"><div class="num">40</div><div class="label">Pending</div></div>
+  <div class="card"><div class="num">81.4%</div><div class="label">Overall hit rate</div></div>
+</div>
+<div class="filter-bar">
+  <div><label for="fSource">Source</label><br><select id="fSource" onchange="applyHistoryFilters()"><option value="">All</option><option value="Best Pick">Best Pick</option></select></div>
+  <div><label for="fLeague">League</label><br><select id="fLeague" onchange="applyHistoryFilters()"><option value="">All</option><option value="1. SNL (Slovenia)">1. SNL (Slovenia)</option><option value="1. liga (Slovakia)">1. liga (Slovakia)</option><option value="Bundesliga (Austria)">Bundesliga (Austria)</option><option value="Czech Liga (Czech Republic)">Czech Liga (Czech Republic)</option><option value="Ekstraklasa (Poland)">Ekstraklasa (Poland)</option><option value="Eliteserien (Norway)">Eliteserien (Norway)</option><option value="Eredivisie (Netherlands)">Eredivisie (Netherlands)</option><option value="First Division A (Belgium)">First Division A (Belgium)</option><option value="First League (Bulgaria)">First League (Bulgaria)</option><option value="HNL (Croatia)">HNL (Croatia)</option><option value="Meistriliiga (Estonia)">Meistriliiga (Estonia)</option><option value="NB I (Hungary)">NB I (Hungary)</option><option value="Premier League (Russia)">Premier League (Russia)</option><option value="Premiership (Scotland)">Premiership (Scotland)</option><option value="Primeira Liga (Portugal)">Primeira Liga (Portugal)</option><option value="Super League (Switzerland)">Super League (Switzerland)</option><option value="Super Liga (Serbia)">Super Liga (Serbia)</option><option value="Superliga (Denmark)">Superliga (Denmark)</option><option value="Veikkausliiga (Finland)">Veikkausliiga (Finland)</option></select></div>
+  <div><label for="fStatus">Status</label><br><select id="fStatus" onchange="applyHistoryFilters()"><option value="">All</option><option value="PENDING">Pending</option><option value="CORRECT">Correct</option><option value="MISS">Miss</option></select></div>
+</div>
+<table><thead><tr><th>Source</th><th>League</th><th>Date</th><th>Fixture</th><th>Market</th><th>Selection</th>
+<th>Model Prob.</th><th>Market Prob.</th><th>Edge</th><th>Status</th><th>Score</th></tr></thead>
+<tbody id="historyBody"><tr data-source="Best Pick" data-league="Eredivisie (Netherlands)" data-status="PENDING"><td>Best Pick</td><td>Eredivisie (Netherlands)</td><td>2026-08-09</td><td>Sparta vs Feyenoord</td><td>Handicap 2</td><td>Away +2</td><td>93.5%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Super Liga (Serbia)" data-status="PENDING"><td>Best Pick</td><td>Super Liga (Serbia)</td><td>2026-08-09</td><td>Vojvodina vs Radnik</td><td>Home or Draw</td><td>Home or Draw</td><td>92.5%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="PENDING"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-09</td><td>Žilina vs Skalica</td><td>Handicap 2</td><td>Away +2</td><td>90.8%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="PENDING"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-09</td><td>KuPS vs TPS</td><td>Home or Draw</td><td>Home or Draw</td><td>90.6%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="PENDING"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-08-09</td><td>Lech vs Piast</td><td>Home or Draw</td><td>Home or Draw</td><td>90.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Primeira Liga (Portugal)" data-status="PENDING"><td>Best Pick</td><td>Primeira Liga (Portugal)</td><td>2026-08-09</td><td>Porto vs Alverca</td><td>Home or Draw</td><td>Home or Draw</td><td>90.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="PENDING"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-09</td><td>Levadia vs Nomme Utd</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>93.8%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First Division A (Belgium)" data-status="PENDING"><td>Best Pick</td><td>First Division A (Belgium)</td><td>2026-08-09</td><td>Anderlecht vs La Louvière</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>90.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="PENDING"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-09</td><td>Austria vs LASK</td><td>Handicap 2</td><td>Away +2</td><td>95.3%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Super Liga (Serbia)" data-status="PENDING"><td>Best Pick</td><td>Super Liga (Serbia)</td><td>2026-08-09</td><td>OFK vs Železničar P</td><td>Handicap 2</td><td>Away +2</td><td>88.7%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First League (Bulgaria)" data-status="PENDING"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-09</td><td>Septemvri vs CSKA</td><td>Handicap 2</td><td>Away +2</td><td>93.2%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First League (Bulgaria)" data-status="PENDING"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-09</td><td>Cherno more vs Ludogorets</td><td>Handicap 2</td><td>Away +2</td><td>97.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Super League (Switzerland)" data-status="PENDING"><td>Best Pick</td><td>Super League (Switzerland)</td><td>2026-08-09</td><td>Basel vs Thun</td><td>Handicap 2</td><td>Away +2</td><td>88.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="PENDING"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-09</td><td>Jablonec vs Slovácko</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First Division A (Belgium)" data-status="PENDING"><td>Best Pick</td><td>First Division A (Belgium)</td><td>2026-08-09</td><td>Charleroi vs OHL</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="HNL (Croatia)" data-status="PENDING"><td>Best Pick</td><td>HNL (Croatia)</td><td>2026-08-09</td><td>Slaven vs Varaždin</td><td>Handicap 2</td><td>Away +2</td><td>96.9%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="NB I (Hungary)" data-status="PENDING"><td>Best Pick</td><td>NB I (Hungary)</td><td>2026-08-09</td><td>Debrecen vs Nyíregyháza</td><td>Handicap 2</td><td>Away +2</td><td>94.9%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Primeira Liga (Portugal)" data-status="PENDING"><td>Best Pick</td><td>Primeira Liga (Portugal)</td><td>2026-08-09</td><td>Moreirense vs Braga</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="PENDING"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-09</td><td>Inter Turku vs Lahti</td><td>Handicap 2</td><td>Away +2</td><td>91.2%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Premier League (Russia)" data-status="PENDING"><td>Best Pick</td><td>Premier League (Russia)</td><td>2026-08-09</td><td>Rubin vs Orenburg</td><td>Handicap 2</td><td>Away +2</td><td>86.1%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Eredivisie (Netherlands)" data-status="PENDING"><td>Best Pick</td><td>Eredivisie (Netherlands)</td><td>2026-08-08</td><td>PSV vs Fortuna</td><td>Home or Draw</td><td>Home or Draw</td><td>97.7%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="PENDING"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-08</td><td>Trans vs Kalju</td><td>Handicap 2</td><td>Away +2</td><td>97.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Super League (Switzerland)" data-status="PENDING"><td>Best Pick</td><td>Super League (Switzerland)</td><td>2026-08-08</td><td>Lausanne vs Young Boys</td><td>Handicap 2</td><td>Away +2</td><td>96.7%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="PENDING"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-08-08</td><td>Radomiak vs Górnik</td><td>Handicap 2</td><td>Away +2</td><td>96.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="PENDING"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-08</td><td>Zlín vs Bohemians</td><td>Handicap 2</td><td>Away +2</td><td>91.1%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="PENDING"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-08</td><td>Trans vs Kalju</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>93.8%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Eliteserien (Norway)" data-status="PENDING"><td>Best Pick</td><td>Eliteserien (Norway)</td><td>2026-08-08</td><td>Vålerenga vs Bodø/Glimt</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>90.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="PENDING"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-08</td><td>Teplice vs Plzeň</td><td>Handicap 2</td><td>Away +2</td><td>89.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="PENDING"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-08</td><td>Ml. Boleslav vs Sparta</td><td>Handicap 2</td><td>Away +2</td><td>94.9%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First Division A (Belgium)" data-status="PENDING"><td>Best Pick</td><td>First Division A (Belgium)</td><td>2026-08-08</td><td>Westerlo vs R. Union SG</td><td>Handicap 2</td><td>Away +2</td><td>93.6%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="PENDING"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-08</td><td>Hartberg vs Sturm</td><td>Handicap 2</td><td>Away +2</td><td>97.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First League (Bulgaria)" data-status="PENDING"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-08</td><td>Lokomotiv Sf vs CSKA 1948</td><td>Handicap 2</td><td>Away +2</td><td>97.4%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Primeira Liga (Portugal)" data-status="PENDING"><td>Best Pick</td><td>Primeira Liga (Portugal)</td><td>2026-08-08</td><td>Estrela vs Sporting</td><td>Handicap 2</td><td>Away +2</td><td>97.3%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="PENDING"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-08</td><td>Zemplín vs Komárno</td><td>Handicap 2</td><td>Away +2</td><td>91.1%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="PENDING"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-08-08</td><td>Kielce vs Legia</td><td>Handicap 2</td><td>Away +2</td><td>96.9%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Premier League (Russia)" data-status="PENDING"><td>Best Pick</td><td>Premier League (Russia)</td><td>2026-08-08</td><td>CSKA vs Rostov</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="Primeira Liga (Portugal)" data-status="PENDING"><td>Best Pick</td><td>Primeira Liga (Portugal)</td><td>2026-08-08</td><td>Vitória SC vs Arouca</td><td>Handicap 2</td><td>Away +2</td><td>96.2%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="HNL (Croatia)" data-status="PENDING"><td>Best Pick</td><td>HNL (Croatia)</td><td>2026-08-08</td><td>Lokomotiva vs Gorica</td><td>Handicap 2</td><td>Away +2</td><td>86.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr data-source="Best Pick" data-league="First League (Bulgaria)" data-status="PENDING"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-07</td><td>Levski vs Loko Plovdiv</td><td>Home or Draw</td><td>Home or Draw</td><td>92.4%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="CORRECT"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-07</td><td>Kuressaare vs Laagri</td><td>Handicap 2</td><td>Away +2</td><td>89.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>3-2</td></tr>
+<tr data-source="Best Pick" data-league="Primeira Liga (Portugal)" data-status="PENDING"><td>Best Pick</td><td>Primeira Liga (Portugal)</td><td>2026-08-07</td><td>Estoril vs Famalicão</td><td>Handicap 2</td><td>Away +2</td><td>97.0%</td><td>-</td><td>-</td><td>PENDING</td><td></td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="CORRECT"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-07</td><td>SJK vs Gnistan</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="1. SNL (Slovenia)" data-status="CORRECT"><td>Best Pick</td><td>1. SNL (Slovenia)</td><td>2026-08-02</td><td>Olimpija vs Aluminij</td><td>Home or Away</td><td>Home or Away</td><td>78.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="1. SNL (Slovenia)" data-status="CORRECT"><td>Best Pick</td><td>1. SNL (Slovenia)</td><td>2026-08-02</td><td>Radomlje vs Bravo</td><td>Handicap 2</td><td>Away +2</td><td>77.5%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="CORRECT"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-02</td><td>Ludogorets vs Botev Vratsa</td><td>Handicap 2</td><td>Away +2</td><td>85.7%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="CORRECT"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-02</td><td>Oulu vs Ilves</td><td>Handicap 2</td><td>Away +2</td><td>85.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="NB I (Hungary)" data-status="MISS"><td>Best Pick</td><td>NB I (Hungary)</td><td>2026-08-02</td><td>Újpest vs Debrecen</td><td>Handicap 2</td><td>Away +2</td><td>85.3%</td><td>-</td><td>-</td><td>MISS</td><td>4-2</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Super League (Switzerland)" data-status="MISS"><td>Best Pick</td><td>Super League (Switzerland)</td><td>2026-08-02</td><td>Sion vs Luzern</td><td>Handicap 2</td><td>Away +2</td><td>84.9%</td><td>-</td><td>-</td><td>MISS</td><td>3-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="CORRECT"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-02</td><td>Rapid vs Altach</td><td>Handicap 2</td><td>Away +2</td><td>84.7%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="MISS"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-02</td><td>Kalju vs Tammeka</td><td>Handicap 2</td><td>Away +2</td><td>84.6%</td><td>-</td><td>-</td><td>MISS</td><td>5-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="CORRECT"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-02</td><td>Pardubice vs Jablonec</td><td>Handicap 2</td><td>Away +2</td><td>84.5%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="CORRECT"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-02</td><td>Paide vs Kuressaare</td><td>Handicap 2</td><td>Away +2</td><td>84.1%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Superliga (Denmark)" data-status="CORRECT"><td>Best Pick</td><td>Superliga (Denmark)</td><td>2026-08-02</td><td>Nordsjælland vs Randers</td><td>Handicap 2</td><td>Away +2</td><td>84.1%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="MISS"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-08-02</td><td>GKS Katowice vs Radomiak</td><td>Handicap 2</td><td>Away +2</td><td>83.9%</td><td>-</td><td>-</td><td>MISS</td><td>3-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="CORRECT"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-02</td><td>Olomouc vs Ml. Boleslav</td><td>Handicap 2</td><td>Away +2</td><td>83.9%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Eliteserien (Norway)" data-status="CORRECT"><td>Best Pick</td><td>Eliteserien (Norway)</td><td>2026-08-02</td><td>Brann vs Rosenborg</td><td>Home or Draw</td><td>Home or Draw</td><td>83.9%</td><td>-</td><td>-</td><td>CORRECT</td><td>3-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Super Liga (Serbia)" data-status="CORRECT"><td>Best Pick</td><td>Super Liga (Serbia)</td><td>2026-08-02</td><td>Partizan vs FK IMT</td><td>Handicap 2</td><td>Away +2</td><td>83.3%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="CORRECT"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-02</td><td>Flora vs Laagri</td><td>Handicap 2</td><td>Away +2</td><td>81.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Eliteserien (Norway)" data-status="CORRECT"><td>Best Pick</td><td>Eliteserien (Norway)</td><td>2026-08-02</td><td>Molde vs Sarpsborg</td><td>Home or Draw</td><td>Home or Draw</td><td>79.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>3-3</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Superliga (Denmark)" data-status="CORRECT"><td>Best Pick</td><td>Superliga (Denmark)</td><td>2026-08-02</td><td>Brøndby vs Viborg</td><td>Handicap 2</td><td>Away +2</td><td>85.8%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Superliga (Denmark)" data-status="CORRECT"><td>Best Pick</td><td>Superliga (Denmark)</td><td>2026-08-02</td><td>Silkeborg vs København</td><td>Handicap 2</td><td>Away +2</td><td>85.8%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-3</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="NB I (Hungary)" data-status="MISS"><td>Best Pick</td><td>NB I (Hungary)</td><td>2026-08-02</td><td>Győr vs Nyíregyháza</td><td>Handicap 2</td><td>Away +2</td><td>85.7%</td><td>-</td><td>-</td><td>MISS</td><td>4-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Meistriliiga (Estonia)" data-status="CORRECT"><td>Best Pick</td><td>Meistriliiga (Estonia)</td><td>2026-08-02</td><td>Vaprus vs Levadia</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>90.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Super League (Switzerland)" data-status="CORRECT"><td>Best Pick</td><td>Super League (Switzerland)</td><td>2026-08-02</td><td>GC Zürich vs Lugano</td><td>Handicap 2</td><td>Away +2</td><td>88.3%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-4</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="CORRECT"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-02</td><td>VPS vs Inter Turku</td><td>Handicap 2</td><td>Away +2</td><td>88.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premier League (Russia)" data-status="CORRECT"><td>Best Pick</td><td>Premier League (Russia)</td><td>2026-08-02</td><td>Orenburg vs Zenit</td><td>Handicap 2</td><td>Away +2</td><td>87.2%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-3</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="CORRECT"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-02</td><td>Zemplín vs Žilina</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="CORRECT"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-02</td><td>Komárno vs Spartak</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="CORRECT"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-02</td><td>Bohemians vs Hradec Kr.</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="HNL (Croatia)" data-status="CORRECT"><td>Best Pick</td><td>HNL (Croatia)</td><td>2026-08-02</td><td>Varaždin vs Hajduk</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premier League (Russia)" data-status="CORRECT"><td>Best Pick</td><td>Premier League (Russia)</td><td>2026-08-02</td><td>Akhmat vs Spartak M</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premiership (Scotland)" data-status="CORRECT"><td>Best Pick</td><td>Premiership (Scotland)</td><td>2026-08-02</td><td>Hibernian vs Motherwell</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="MISS"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-02</td><td>WAC vs Austria</td><td>Handicap 2</td><td>Away +2</td><td>85.8%</td><td>-</td><td>-</td><td>MISS</td><td>3-0</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="MISS"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-08-02</td><td>Legia vs Zagłębie</td><td>Handicap 2</td><td>Away +2</td><td>85.8%</td><td>-</td><td>-</td><td>MISS</td><td>3-1</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="MISS"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-01</td><td>WSG Tirol vs Sturm</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>90.0%</td><td>-</td><td>-</td><td>MISS</td><td>1-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Super League (Switzerland)" data-status="CORRECT"><td>Best Pick</td><td>Super League (Switzerland)</td><td>2026-08-01</td><td>Zürich vs Servette</td><td>Handicap 2</td><td>Away +2</td><td>89.4%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="MISS"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-01</td><td>Slovan vs Podbrezová</td><td>Handicap 2</td><td>Away +2</td><td>89.0%</td><td>-</td><td>-</td><td>MISS</td><td>3-0</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="Super Liga (Serbia)" data-status="MISS"><td>Best Pick</td><td>Super Liga (Serbia)</td><td>2026-08-01</td><td>Čukarički vs Radnički Krag</td><td>Handicap 2</td><td>Away +2</td><td>88.6%</td><td>-</td><td>-</td><td>MISS</td><td>3-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premiership (Scotland)" data-status="CORRECT"><td>Best Pick</td><td>Premiership (Scotland)</td><td>2026-08-01</td><td>Aberdeen vs Hearts</td><td>Handicap 2</td><td>Away +2</td><td>88.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="1. liga (Slovakia)" data-status="CORRECT"><td>Best Pick</td><td>1. liga (Slovakia)</td><td>2026-08-01</td><td>Skalica vs Ružomberok</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Bundesliga (Austria)" data-status="CORRECT"><td>Best Pick</td><td>Bundesliga (Austria)</td><td>2026-08-01</td><td>Salzburg vs Hartberg</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="CORRECT"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-01</td><td>Liberec vs Teplice</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="CORRECT"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-08-01</td><td>Botev vs Cherno more</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="HNL (Croatia)" data-status="CORRECT"><td>Best Pick</td><td>HNL (Croatia)</td><td>2026-08-01</td><td>Istra vs Lokomotiva</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-3</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premier League (Russia)" data-status="CORRECT"><td>Best Pick</td><td>Premier League (Russia)</td><td>2026-08-01</td><td>Baltika vs Dinamo M</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Premiership (Scotland)" data-status="CORRECT"><td>Best Pick</td><td>Premiership (Scotland)</td><td>2026-08-01</td><td>Falkirk vs St. Mirren</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Super Liga (Serbia)" data-status="CORRECT"><td>Best Pick</td><td>Super Liga (Serbia)</td><td>2026-08-01</td><td>Novi Pazar vs OFK</td><td>Handicap 2</td><td>Away +2</td><td>87.0%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-4</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Veikkausliiga (Finland)" data-status="CORRECT"><td>Best Pick</td><td>Veikkausliiga (Finland)</td><td>2026-08-01</td><td>Gnistan vs KuPS</td><td>Handicap 2</td><td>Away +2</td><td>86.5%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Czech Liga (Czech Republic)" data-status="CORRECT"><td>Best Pick</td><td>Czech Liga (Czech Republic)</td><td>2026-08-01</td><td>Ostrava vs Slavia</td><td>Over 8.5 Corners</td><td>Over 8.5 Corners</td><td>93.8%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-4</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="CORRECT"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-07-31</td><td>Slavia Sofia vs Lokomotiv Sf</td><td>Under 12.5 Corners</td><td>Under 12.5 Corners</td><td>97.3%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="CORRECT"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-07-31</td><td>Wisła Płock vs Widzew</td><td>Under 4.5</td><td>Under 4.5</td><td>96.5%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="CORRECT"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-07-31</td><td>Motor vs Jagiellonia</td><td>Under 4.5</td><td>Under 4.5</td><td>94.7%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="CORRECT"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-07-31</td><td>Slavia Sofia vs Lokomotiv Sf</td><td>Under 4.5</td><td>Under 4.5</td><td>94.7%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="CORRECT"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-07-31</td><td>CSKA 1948 vs Arda</td><td>Under 4.5</td><td>Under 4.5</td><td>94.7%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-1</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="CORRECT"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-07-31</td><td>Wisła Płock vs Widzew</td><td>Under 12.5 Corners</td><td>Under 12.5 Corners</td><td>93.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="Ekstraklasa (Poland)" data-status="CORRECT"><td>Best Pick</td><td>Ekstraklasa (Poland)</td><td>2026-07-31</td><td>Motor vs Jagiellonia</td><td>Under 12.5 Corners</td><td>Under 12.5 Corners</td><td>93.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>1-2</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="HNL (Croatia)" data-status="CORRECT"><td>Best Pick</td><td>HNL (Croatia)</td><td>2026-07-31</td><td>Dinamo Zagreb vs Slaven</td><td>Under 12.5 Corners</td><td>Under 12.5 Corners</td><td>93.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>2-0</td></tr>
+<tr class='hit' data-source="Best Pick" data-league="NB I (Hungary)" data-status="CORRECT"><td>Best Pick</td><td>NB I (Hungary)</td><td>2026-07-31</td><td>Puskás vs Kisvárda</td><td>Under 12.5 Corners</td><td>Under 12.5 Corners</td><td>93.6%</td><td>-</td><td>-</td><td>CORRECT</td><td>0-2</td></tr>
+<tr class='miss' data-source="Best Pick" data-league="First League (Bulgaria)" data-status="MISS"><td>Best Pick</td><td>First League (Bulgaria)</td><td>2026-07-27</td><td>CSKA vs Botev</td><td>Under 4.5</td><td>Under 4.5</td><td>94.7%</td><td>-</td><td>-</td><td>MISS</td><td>3-2</td></tr>
+</tbody></table>
+<script>
+function applyHistoryFilters() {
+  var source = document.getElementById('fSource').value;
+  var league = document.getElementById('fLeague').value;
+  var status = document.getElementById('fStatus').value;
+  document.querySelectorAll('#historyBody tr').forEach(function(row) {
+    var show = true;
+    if (source && row.dataset.source !== source) show = false;
+    if (league && row.dataset.league !== league) show = false;
+    if (status && row.dataset.status !== status) show = false;
+    row.style.display = show ? '' : 'none';
+  });
+}
+</script>
+</body></html>

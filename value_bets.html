@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Predicting Machine - Top Value Bets</title>
+<style>
+
+body { font-family: Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:24px; }
+h1 { font-size: 22px; margin-bottom:4px; }
+.sub { color:#94a3b8; font-size:13px; margin-bottom:20px; }
+.nav { font-size:13px; margin-bottom:16px; }
+.nav a { color:#93c5fd; text-decoration:none; margin-right:16px; }
+.nav a:hover { text-decoration:underline; }
+.cards { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+.card { background:#1e293b; border-radius:10px; padding:16px 20px; min-width:160px; }
+.card .num { font-size:26px; font-weight:bold; }
+.card .label { font-size:12px; color:#94a3b8; }
+h2 { font-size:16px; margin-top:32px; border-bottom:1px solid #334155; padding-bottom:6px; }
+h3 { font-size:14px; margin-top:20px; color:#93c5fd; }
+table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px; }
+th { text-align:left; background:#1e293b; padding:6px; position:sticky; top:0; }
+td { padding:5px 7px; border-bottom:1px solid #1e293b; }
+tr.low { background:#3f2f10; }
+tr.shortrest { background:#3f1f1f; }
+.rest-badge { color:#f87171; font-size:11px; }
+.edge-badge { color:#4ade80; font-size:11px; }
+.note { font-size:12px; color:#94a3b8; background:#1e293b; padding:12px; border-radius:8px; margin-top:8px; }
+.combined { font-weight:bold; font-size:15px; margin-top:10px; }
+.chart-controls { margin-top:16px; font-size:13px; }
+.chart-controls select { background:#1e293b; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:5px 8px; margin-left:6px; }
+.chart-wrap { background:#1e293b; border-radius:10px; padding:14px; margin-top:8px; max-width:900px; }
+.filter-bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; background:#1e293b; padding:12px; border-radius:8px; }
+.filter-bar label { font-size:12px; color:#94a3b8; }
+.filter-bar select { background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:5px 8px; }
+.pick-card { background:#1e293b; border-radius:10px; padding:14px 16px; margin-top:10px; }
+.pick-header { font-size:11.5px; color:#94a3b8; margin-bottom:4px; }
+.pick-rank { color:#93c5fd; font-weight:bold; }
+.pick-main { font-size:14px; margin-bottom:8px; }
+.h2h-block { background:#111c31; border-radius:8px; padding:10px 12px; margin-top:6px; }
+.h2h-title { font-size:11px; color:#93c5fd; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+.h2h-summary { font-size:12.5px; color:#cbd5e1; margin-bottom:6px; }
+.h2h-empty { font-size:12.5px; color:#64748b; font-style:italic; }
+.h2h-table { width:100%; font-size:12px; margin-top:0; }
+.h2h-table td { padding:3px 6px; border-bottom:1px solid #1e293b; color:#94a3b8; }
+.prob-bar-wrap { display:flex; align-items:center; gap:8px; margin-top:6px; max-width:360px; }
+.prob-bar { flex:1; height:14px; background:#0f172a; border-radius:7px; overflow:hidden; border:1px solid #334155; }
+.prob-bar-fill { height:100%; border-radius:7px; }
+.prob-bar-fill.prob-high { background:linear-gradient(90deg,#16a34a,#4ade80); }
+.prob-bar-fill.prob-medium { background:linear-gradient(90deg,#d97706,#fbbf24); }
+.prob-bar-fill.prob-low { background:linear-gradient(90deg,#dc2626,#f87171); }
+.prob-bar-label { font-size:11px; color:#94a3b8; min-width:34px; text-align:right; }
+
+/* Full multi-panel Best Pick card */
+.full-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:18px 20px; margin-top:16px; }
+.full-card.high-value { border:2px solid #22c55e; background:linear-gradient(135deg, rgba(34,197,94,0.10), #1e293b 45%); }
+.fc-header { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;
+             margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid #334155; }
+.fc-teams { font-size:1.15em; font-weight:700; }
+.fc-teams .vs2 { color:#64748b; font-weight:400; font-size:0.8em; margin:0 8px; }
+.fc-meta { text-align:right; font-size:12px; color:#94a3b8; line-height:1.6; }
+.fc-hv-badge { display:inline-block; background:#16a34a; color:#f0fdf4; padding:3px 10px; border-radius:20px;
+               font-size:11px; font-weight:700; margin-top:4px; }
+.fc-pick-callout { background:#111c31; border-radius:8px; padding:12px 14px; margin-bottom:16px; }
+.fc-pick-label { font-size:11px; color:#93c5fd; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+.fc-pick-main { font-size:14.5px; font-weight:600; }
+.fc-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:14px; }
+.fc-section { background:#111c31; border-radius:8px; padding:12px 14px; }
+.fc-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#93c5fd; margin-bottom:10px; }
+.fc-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12.5px; gap:8px; }
+.fc-row:last-child { margin-bottom:0; }
+.fc-row .fc-label { color:#cbd5e1; white-space:nowrap; }
+.fc-form-icons { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.fc-form-icon { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+                font-size:10px; font-weight:700; color:#0f172a; flex-shrink:0; }
+.fc-form-icon.fW { background:#4ade80; }
+.fc-form-icon.fD { background:#fbbf24; }
+.fc-form-icon.fL { background:#f87171; }
+.fc-win-pct { margin-left:6px; font-weight:700; font-size:11.5px; color:#e2e8f0; }
+.fc-xg-track { flex:1; height:22px; background:#0f172a; border-radius:5px; overflow:hidden; border:1px solid #334155; margin-left:10px; }
+.fc-xg-fill { height:100%; background:linear-gradient(90deg,#2563eb,#3b82f6); display:flex; align-items:center;
+              justify-content:center; color:white; font-size:11px; font-weight:700; }
+.fc-strength-track { flex:1; height:14px; background:#0f172a; border-radius:7px; overflow:hidden; border:1px solid #334155; }
+.fc-strength-fill { height:100%; background:linear-gradient(90deg,#2563eb,#3b82f6); }
+.fc-strength-fill.def { background:linear-gradient(90deg,#16a34a,#4ade80); }
+.fc-mini-badge { padding:2px 8px; border-radius:5px; font-size:11.5px; font-weight:700; color:#0f172a; background:#93c5fd; min-width:32px; text-align:center; }
+.fc-corner-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-top:6px; }
+.fc-corner-cell { font-size:11px; }
+.fc-corner-cell .fc-label { display:block; margin-bottom:3px; font-size:10.5px; color:#94a3b8; }
+.fc-insufficient { color:#64748b; font-style:italic; font-size:11.5px; }
+
+/* League Matches page */
+.league-jump { display:flex; flex-wrap:wrap; gap:6px; background:#1e293b; padding:12px; border-radius:8px; margin-bottom:20px; }
+.league-jump a { color:#93c5fd; text-decoration:none; font-size:12px; background:#111c31; padding:4px 10px; border-radius:12px; }
+.league-jump a:hover { background:#334155; text-decoration:none; }
+.league-section { margin-top:36px; padding-top:4px; border-top:2px solid #334155; }
+.league-section h2 { scroll-margin-top:12px; }
+.table-scroll { overflow-x:auto; }
+.table-scroll table { min-width:1500px; }
+.result-cell.best { font-weight:700; color:#4ade80; }
+
+</style></head>
+<body>
+<h1>Predicting Machine — Top Value Bets</h1>
+<div class="sub">Generated 2026-08-07T18:09:27.201063 &middot; Model 1.1.0 &middot; Top 0 Match Result selections ranked by edge (model probability vs. market implied probability) from the nearest upcoming week</div>
+<div class="nav"><a href="dashboard.html">&larr; Full Dashboard</a> <a href="best_picks.html">→ View Best Picks</a> <a href="league_matches.html">→ All League Matches</a> <a href="best_picks_history.html">→ View History</a></div>
+<div class="note">Edge = model probability minus the market's de-vigged implied probability (football-data.co.uk odds, market average). Only the 14 leagues with an odds source are covered - see the dashboard's Method &amp; Assumptions sheet.</div>
+<div class="filter-bar">
+  <div><label for="fCountry_picks">Country</label><br><select id="fCountry_picks" onchange="applyPickFilters_picks()"><option value="">All</option></select></div>
+  <div><label for="fMarket_picks">Market</label><br><select id="fMarket_picks" onchange="applyPickFilters_picks()"><option value="">All</option></select></div>
+  <div><label for="fDate_picks">Date</label><br><select id="fDate_picks" onchange="applyPickFilters_picks()"><option value="">All</option></select></div>
+  <div><label for="fMinProb_picks">Min. Probability</label><br><select id="fMinProb_picks" onchange="applyPickFilters_picks()">
+    <option value="0">Any</option><option value="60">60%+</option><option value="70">70%+</option>
+    <option value="80">80%+</option><option value="90">90%+</option></select></div>
+</div>
+<script>
+function applyPickFilters_picks() {
+  var root = document.getElementById('scope_picks') || document;
+  var country = document.getElementById('fCountry_picks').value;
+  var market = document.getElementById('fMarket_picks').value;
+  var date = document.getElementById('fDate_picks').value;
+  var minProb = parseInt(document.getElementById('fMinProb_picks').value, 10) || 0;
+
+  root.querySelectorAll('.pick-card').forEach(function(card) {
+    var show = true;
+    if (country && card.dataset.country !== country) show = false;
+    if (market && card.dataset.market !== market) show = false;
+    if (date && card.dataset.date !== date) show = false;
+    if (minProb && parseInt(card.dataset.probability, 10) < minProb) show = false;
+    card.style.display = show ? '' : 'none';
+  });
+  root.querySelectorAll('.country-group').forEach(function(g) {
+    var anyVisible = Array.prototype.some.call(g.querySelectorAll('.pick-card'), function(c) { return c.style.display !== 'none'; });
+    g.style.display = anyVisible ? '' : 'none';
+  });
+  root.querySelectorAll('.bucket-group').forEach(function(g) {
+    var anyVisible = Array.prototype.some.call(g.querySelectorAll('.country-group'), function(cg) { return cg.style.display !== 'none'; });
+    g.style.display = anyVisible ? '' : 'none';
+  });
+}
+</script>
+
+<div class="note">No value bets this week - either no fixtures cleared the 5% edge threshold, or fetch_odds.py hasn't been run yet to populate odds_cache.json.</div>
+</body></html>
